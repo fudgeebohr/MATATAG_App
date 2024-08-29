@@ -4,9 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -60,6 +64,9 @@ private val CustomTypography = Typography(
     )
 )
 
+// Define the PdfFile data class
+data class PdfFile(val title: String, val fileName: String)
+
 class MainActivity : ComponentActivity() {
 
     private val pdfList = listOf(
@@ -68,8 +75,6 @@ class MainActivity : ComponentActivity() {
         PdfFile("CGP Module 4", "CGP_Module-4.pdf"),
         PdfFile("CGP Module 7", "CGP_Module-7.pdf")
     )
-
-    private fun PdfFile(Title: String, FileName: String): Any = Unit
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,20 +85,58 @@ class MainActivity : ComponentActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = PdfAdapter(pdfList) { pdfFile ->
             val intent = Intent(this, PdfViewerActivity::class.java)
-            intent.putExtra("pdfFileName", pdfFile.filePath) // Send the filename to the PdfViewerActivity
+            intent.putExtra("pdfFileName", pdfFile.fileName) // Send the filename to the PdfViewerActivity
             startActivity(intent)
         }
     }
 
-    class PdfViewerActivity {
+    class PdfViewerActivity : ComponentActivity() {
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            setContentView(R.layout.activity_pdf_viewer)
 
+            val pdfFileName = intent.getStringExtra("pdfFileName")
+            if (pdfFileName != null) {
+                // Initialize PDF viewer with the file
+            } else {
+                // Log error and handle appropriately
+                Log.e("PdfViewerActivity", "PDF file name is null")
+            }
+        }
     }
 
+
+
     private fun PdfAdapter(
-        pdfList: List<Any>,
-        any: Any
-    ): RecyclerView.Adapter<RecyclerView.ViewHolder>? {
-        TODO("Not yet implemented")
+        pdfList: List<PdfFile>,
+        onItemClick: (PdfFile) -> Unit
+    ): RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+        // ViewHolder class to hold the view for each PDF item
+        class PdfViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val titleTextView: TextView = view.findViewById(R.id.titleTextView)
+        }
+
+        // Inflate the item layout and create a ViewHolder instance
+        fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PdfViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.pdf_item_layout, parent, false)
+            return PdfViewHolder(view)
+        }
+
+        // Bind data to the views in the ViewHolder
+        fun onBindViewHolder(holder: PdfViewHolder, position: Int) {
+            val pdfFile = pdfList[position]
+            holder.titleTextView.text = pdfFile.title
+
+            // Handle click event on the PDF item
+            holder.itemView.setOnClickListener {
+                onItemClick(pdfFile)
+            }
+        }
+
+        // Return the total number of items
+        fun getItemCount(): Int = pdfList.size
+        return TODO("Provide the return value")
     }
 
     // Function to create a file from URI
@@ -109,7 +152,7 @@ class MainActivity : ComponentActivity() {
     }
 
     // Function to open PDF using an intent
-    fun openPdf(pdfFile: File) {
+    private fun openPdf(pdfFile: File) {
         val uri = FileProvider.getUriForFile(this, "$packageName.provider", pdfFile)
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "application/pdf")

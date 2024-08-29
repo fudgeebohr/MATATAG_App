@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation("androidx.activity:activity-compose:1.9.1")
     implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.androidx.media3.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
